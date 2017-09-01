@@ -9,6 +9,7 @@ public class TransformationGrid : MonoBehaviour {
 
 	private Transform[] _grid;
 	private List<Transformation> _transformations;
+	private Matrix4x4 transformationMatrix;
 	
 	private void Awake () 
 	{
@@ -25,7 +26,7 @@ public class TransformationGrid : MonoBehaviour {
 
 	private void Update()
 	{
-		GetComponents<Transformation>(_transformations);
+		UpdateTransformations();
 		for (int i = 0, z = 0; z < GridResolution; z++)
 		{
 			for (int y = 0; y < GridResolution; y++)
@@ -37,6 +38,20 @@ public class TransformationGrid : MonoBehaviour {
 			}
 		}
 	}
+
+	private void UpdateTransformations()
+	{
+		GetComponents<Transformation>(_transformations);
+		if (_transformations.Count > 0)
+		{
+			transformationMatrix = _transformations[0].Matrix;
+			for (int i = 0; i < _transformations.Count; i++)
+			{
+				transformationMatrix = _transformations[i].Matrix * transformationMatrix;
+			}
+		}
+	}
+
 
 	private Transform CreateGridPoint (int x, int y, int z) {
 		Transform point = Instantiate(Prefab, transform);
@@ -60,10 +75,6 @@ public class TransformationGrid : MonoBehaviour {
 	private Vector3 TransformPoint(int x, int y, int z)
 	{
 		Vector3 coordinates = GetCoordinates(x, y, z);
-		for (int i = 0; i < _transformations.Count; i++)
-		{
-			coordinates = _transformations[i].Apply(coordinates);
-		}
-		return coordinates;
+		return transformationMatrix.MultiplyPoint(coordinates);
 	}
 }
