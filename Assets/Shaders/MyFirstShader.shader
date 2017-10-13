@@ -2,6 +2,7 @@
 
     Properties {
         _Tint ("Tint", Color) = (1, 1, 1, 1)
+        _MainTex ("Texture", 2D) = "white" {}
     }
     
     SubShader {
@@ -12,23 +13,29 @@
             #pragma fragment MyFragmentProgram
             
             #include "UnityCG.cginc"
-            
+
             float4 _Tint;
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+
             struct Interpolators {
                 float4 position : SV_POSITION;
-                float3 localPosition : TEXCOORD0;
+                float2 uv : TEXCOORD0;
+            };
+            struct VertexData {
+                float4 position : POSITION;
+                float2 uv : TEXCOORD0;
             };
             
-            Interpolators MyVertexProgram(
-                float4 position : POSITION) {
+            Interpolators MyVertexProgram(VertexData vertexData) {
                 Interpolators i;
-                i.localPosition = position.xyz;
-                i.position = mul(UNITY_MATRIX_MVP, position);
+                i.position = mul(UNITY_MATRIX_MVP, vertexData.position);
+                i.uv = TRANSFORM_TEX(vertexData.uv , _MainTex);
                 return i;
             }
             
             float4 MyFragmentProgram(Interpolators i) : SV_TARGET {
-                return float4(i.localPosition, 1);
+                return tex2D(_MainTex, i.uv) * _Tint;
             }
             
             ENDCG
